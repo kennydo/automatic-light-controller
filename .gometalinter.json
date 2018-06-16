@@ -1,0 +1,11 @@
+{
+    "Enable": [
+        "goimports",
+        "gofmt",
+        "vet",
+        "vetshadow",
+        "golint",
+        "ineffassign",
+        "megacheck"
+    ]
+}
