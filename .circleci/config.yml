@@ -1,0 +1,126 @@
+version: 2
+
+_helpers:
+  - &circleci_golang_image
+    image: circleci/golang:1.10
+jobs:
+  incremental_lint:
+    docker:
+      - *circleci_golang_image
+    working_directory: /go/src/github.com/kennydo/automatic-light-controller
+    steps:
+      - checkout
+
+      - run:
+          name: Install pre-commit
+          command: |
+            sudo apt-get install -y python-pip
+            sudo pip install pre-commit==1.8.2
+
+      - restore_cache:
+          key: pre-commit-hooks-{{ checksum ".pre-commit-config.yaml" }}
+
+      - run:
+          name: Reset the git repo back to the merge base with master
+          command: |
+            export MERGE_COMMIT=$(git merge-base origin/master $CIRCLE_BRANCH)
+            echo "Soft resetting git repo to commit $MERGE_COMMIT"
+            git reset --soft $MERGE_COMMIT
+            echo "Here's the files that pre-commit will run on:"
+            git status
+
+      - run:
+          name: Run pre-commit
+          command: |
+            pre-commit run
+
+      - run:
+          name: Print git diff
+          when: on_fail
+          command: |
+            git diff --exit-code
+
+      - save_cache:
+          key: pre-commit-hooks-{{ checksum ".pre-commit-config.yaml" }}
+          paths:
+          - ~/.pre-commit
+
+
+  build:
+    docker:
+      - *circleci_golang_image
+    environment:
+      DEP_VERSION: 0.4.1
+      GOMETALINTER_VERSION: 2.0.5
+      TEST_RESULTS_DIR: /tmp/test-results
+    working_directory: /go/src/github.com/kennydo/automatic-light-controller
+    steps:
+      - checkout
+
+      - run: mkdir -p ${TEST_RESULTS_DIR}
+
+      - restore_cache:
+          key: gopkg-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+
+      - run:
+          name: Ensure that dependencies are vendored
+          command: |
+            if [ ! -d /go/src/github.com/kennydo/automatic-light-controller/vendor ]; then
+              wget https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -O /go/bin/dep
+              chmod a+x /go/bin/dep
+              /go/bin/dep ensure
+            fi
+
+      - save_cache:
+          key: gopkg-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+          paths:
+            - /go/src/github.com/kennydo/automatic-light-controller/vendor
+
+
+      - restore_cache:
+          key: gopkg-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
+
+      - run:
+          name:  Install gometalinter
+          command: |
+            if [ ! -d /home/circleci/gometalinter ]; then
+              cd /tmp
+              wget https://github.com/alecthomas/gometalinter/releases/download/v${GOMETALINTER_VERSION}/gometalinter-${GOMETALINTER_VERSION}-linux-amd64.tar.gz
+              tar xzvf gometalinter-${GOMETALINTER_VERSION}-linux-amd64.tar.gz
+              mv gometalinter-${GOMETALINTER_VERSION}-linux-amd64 /home/circleci/gometalinter
+            fi
+
+      - run:
+          name: Install go utiltiies
+          command: |
+            go get github.com/jstemmer/go-junit-report
+
+      - save_cache:
+          key: gopkg-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
+          paths:
+            - /home/circleci/gometalinter
+
+      - run:
+          name: Run gometalinter
+          command: |
+            PATH=/home/circleci/gometalinter:$PATH gometalinter --skip vendor ./...
+
+      - run:
+          name: Run tests
+          command: |
+            trap "go-junit-report <${TEST_RESULTS_DIR}/go-test.out > ${TEST_RESULTS_DIR}/go-test-report.xml" EXIT
+            go test -v ./... | tee ${TEST_RESULTS_DIR}/go-test.out
+
+      - store_artifacts:
+          path: /tmp/test-results
+          destination: raw-test-output
+
+      - store_test_results:
+          path: /tmp/test-results
+
+workflows:
+  version: 2
+  primary_workflow:
+    jobs:
+      - incremental_lint
+      - build

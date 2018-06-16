@@ -1,0 +1,23 @@
+timezone = "US/Pacific"
+
+[hue_bridge]
+ip_address = "192.168.1.100"
+username = "TBD"
+
+[[rules]]
+days = [ "MO", "TU", "WE", "TH", "FR" ]
+[rules.time_trigger]
+local_time = "1:00"
+[rules.light_state]
+brightness = "30%"
+[[rules.conditions]]
+type = "lights_are_on"
+
+[[rules]]
+days = [ "MO", "TU", "WE", "TH", "FR" ]
+[rules.time_trigger]
+solar_event = "sunset"
+[rules.light_state]
+brightness = "100%"
+[[rules.conditions]]
+type = "lights_are_off"
