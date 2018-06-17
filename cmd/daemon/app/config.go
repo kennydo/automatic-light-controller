@@ -22,6 +22,7 @@ type Rule struct {
 	Days        []Weekday   `toml:"days"`
 	TimeTrigger TimeTrigger `toml:"time_trigger"`
 	LightState  LightState  `toml:"light_state"`
+	Conditions  []Condition `toml:"conditions"`
 }
 
 type TimeTrigger struct {
@@ -97,5 +98,41 @@ func (w *Weekday) UnmarshalText(text []byte) error {
 
 	w.Weekday = weekday
 
+	return nil
+}
+
+type Condition struct {
+	Type ConditionType `toml:"type"`
+}
+
+type ConditionType int
+
+const (
+	LightsAreOn ConditionType = iota
+	LightsAreOff
+)
+
+var conditions = [...]string{
+	"LightsAreOn",
+	"LightsAreOff",
+}
+
+// String returns the English name of the day ("Sunday", "Monday", ...).
+func (c ConditionType) String() string { return conditions[c] }
+
+func (c *ConditionType) UnmarshalText(text []byte) error {
+	stringText := string(text)
+	var conditionType ConditionType
+
+	switch stringText {
+	case "lights_are_on":
+		conditionType = LightsAreOn
+	case "lights_are_off":
+		conditionType = LightsAreOff
+	default:
+		return fmt.Errorf("Unrecognized condition type: %v", stringText)
+	}
+
+	c = &conditionType
 	return nil
 }
