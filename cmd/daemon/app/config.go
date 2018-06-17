@@ -19,7 +19,7 @@ type HueBridgeConfig struct {
 }
 
 type Rule struct {
-	Days        []string    `toml:"days"`
+	Days        []Weekday   `toml:"days"`
 	TimeTrigger TimeTrigger `toml:"time_trigger"`
 	LightState  LightState  `toml:"light_state"`
 }
@@ -65,5 +65,37 @@ func (t *Timezone) UnmarshalText(text []byte) error {
 	}
 
 	t.Location = *loc
+	return nil
+}
+
+type Weekday struct {
+	time.Weekday
+}
+
+func (w *Weekday) UnmarshalText(text []byte) error {
+	stringText := string(text)
+	var weekday time.Weekday
+
+	switch stringText {
+	case "MO":
+		weekday = time.Monday
+	case "TU":
+		weekday = time.Tuesday
+	case "WE":
+		weekday = time.Wednesday
+	case "TH":
+		weekday = time.Thursday
+	case "FR":
+		weekday = time.Friday
+	case "SA":
+		weekday = time.Saturday
+	case "SU":
+		weekday = time.Sunday
+	default:
+		return fmt.Errorf("Unrecognized weekday: %v", stringText)
+	}
+
+	w.Weekday = weekday
+
 	return nil
 }
