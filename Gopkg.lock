@@ -7,9 +7,19 @@
   revision = "b26d9c308763d68093482582cea63d69be07a0f0"
   version = "v0.3.0"
 
+[[projects]]
+  branch = "master"
+  name = "github.com/heatxsink/go-hue"
+  packages = [
+    "groups",
+    "hue",
+    "lights"
+  ]
+  revision = "077c5fe843490c62dfd36c7eee473f314dc5d605"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "a8c4e8c53820bfbbeb17362c6ff6e9986dff0496086694b77dd1b3560317d100"
+  inputs-digest = "63cc7a111053c9dc396eb048f8221011eb1cf50e937cae07d562c7a1df88f20f"
   solver-name = "gps-cdcl"
   solver-version = 1
