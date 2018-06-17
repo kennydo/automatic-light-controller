@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"log"
+
 	"github.com/BurntSushi/toml"
 	"github.com/kennydo/automatic-light-controller/cmd/daemon/app"
-	"log"
 )
 
 func main() {

@@ -6,6 +6,7 @@ username = "TBD"
 
 [[rules]]
 days = [ "MO", "TU", "WE", "TH", "FR" ]
+light_groups = [ "Bedroom", "Living Room" ]
 [rules.time_trigger]
 local_time = "1:00"
 [rules.light_state]
@@ -15,6 +16,7 @@ type = "lights_are_on"
 
 [[rules]]
 days = [ "MO", "TU", "WE", "TH", "FR" ]
+light_groups = [ "Bedroom", "Living Room" ]
 [rules.time_trigger]
 solar_event = "sunset"
 [rules.light_state]

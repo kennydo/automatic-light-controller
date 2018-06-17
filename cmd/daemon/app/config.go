@@ -20,6 +20,7 @@ type HueBridgeConfig struct {
 
 type Rule struct {
 	Days        []Weekday   `toml:"days"`
+	LightGroups []string    `toml:"light_groups"`
 	TimeTrigger TimeTrigger `toml:"time_trigger"`
 	LightState  LightState  `toml:"light_state"`
 	Conditions  []Condition `toml:"conditions"`
