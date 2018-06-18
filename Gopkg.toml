@@ -36,3 +36,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/heatxsink/go-hue"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/nathan-osman/go-sunrise"

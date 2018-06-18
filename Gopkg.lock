@@ -17,9 +17,15 @@
   ]
   revision = "077c5fe843490c62dfd36c7eee473f314dc5d605"
 
+[[projects]]
+  branch = "master"
+  name = "github.com/nathan-osman/go-sunrise"
+  packages = ["."]
+  revision = "7c449e7c690b1ad3692d399bb4e49fcf864428d6"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "63cc7a111053c9dc396eb048f8221011eb1cf50e937cae07d562c7a1df88f20f"
+  inputs-digest = "5f9f3b5016c37c605436abb5a0b7370b9508c2925e8b851096b3cb6ae018704d"
   solver-name = "gps-cdcl"
   solver-version = 1

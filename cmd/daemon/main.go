@@ -2,12 +2,10 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 
 	"github.com/BurntSushi/toml"
 	"github.com/kennydo/automatic-light-controller/cmd/daemon/app"
-	"github.com/kennydo/automatic-light-controller/lib/huebridge"
 )
 
 var configPath = flag.String("config", "", "Path to a config file")
@@ -24,11 +22,13 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("Config: %+v", config)
-
-	hueBridge, err := huebridge.New(config.HueBridge.IPAddress.String(), config.HueBridge.Username)
+	app, err := app.New(&config)
 	if err != nil {
 		log.Fatal(err)
 	}
-	fmt.Printf("Bridge: %v,", hueBridge)
+
+	err = app.Run()
+	if err != nil {
+		log.Fatal(err)
+	}
 }

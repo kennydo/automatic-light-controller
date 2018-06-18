@@ -1,9 +1,13 @@
 package huebridge
 
 import (
+	"fmt"
 	"log"
+	"math"
 
 	"github.com/heatxsink/go-hue/groups"
+	"github.com/heatxsink/go-hue/lights"
+	"github.com/kennydo/automatic-light-controller/lib"
 )
 
 type HueBridge struct {
@@ -33,4 +37,29 @@ func New(hostname string, username string) (*HueBridge, error) {
 		groupController: groupController,
 		groupIDByName:   groupIDByName,
 	}, nil
+}
+
+func (b *HueBridge) SetGroupLightState(groupName string, lightState lib.LightState) error {
+	var err error
+
+	groupID, ok := b.groupIDByName[groupName]
+	if !ok {
+		return fmt.Errorf("Did not recognize Hue group name: %v", groupName)
+	}
+
+	desiredState := lights.State{
+		On:  lightState.Brightness.Percent > 0,
+		Bri: uint8(math.Ceil(254 * (float64(lightState.Brightness.Percent) / 100.0))),
+	}
+
+	log.Printf("Going to set group %v to %+v", groupID, desiredState)
+
+	response, err := b.groupController.SetGroupState(groupID, desiredState)
+	if err != nil {
+		return err
+	}
+
+	log.Printf("Response from Hue: %v", response)
+
+	return nil
 }
