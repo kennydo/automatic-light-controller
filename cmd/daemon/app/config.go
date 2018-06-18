@@ -8,9 +8,15 @@ import (
 )
 
 type Config struct {
-	Timezone  Timezone        `toml:"timezone"`
+	Location  LocationConfig  `toml:"location"`
 	HueBridge HueBridgeConfig `toml:"hue_bridge"`
 	Rules     []Rule          `toml:"rules"`
+}
+
+type LocationConfig struct {
+	Timezone  Timezone `toml:"timezone"`
+	Latitude  float64  `toml:"latitude"`
+	Longitude float64  `toml:"longitude"`
 }
 
 type HueBridgeConfig struct {
