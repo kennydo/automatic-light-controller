@@ -43,12 +43,26 @@ func (a *App) Run() error {
 			fmt.Printf("Sleeping %v minutes for scheduled action %+v\n", durationToSleep.Minutes(), scheduledAction)
 			time.Sleep(durationToSleep)
 
-			// TODO: check for whether the conditions are met
 			for _, groupName := range scheduledAction.Rule.LightGroups {
+				conditionsAreSatisfied, err := a.conditionsAreSatisfied(groupName, scheduledAction.Rule.Conditions)
+				if err != nil {
+					break
+				}
+
+				if !conditionsAreSatisfied {
+					fmt.Printf(
+						"Not executing rule %+v on group %v because conditions are not satisfied\n",
+						scheduledAction.Rule,
+						groupName,
+					)
+					continue
+				}
+
 				err = a.huebridge.SetGroupLightState(groupName, scheduledAction.Rule.LightState)
 				if err != nil {
 					break
 				}
+
 			}
 
 			if err != nil {
@@ -62,4 +76,31 @@ func (a *App) Run() error {
 	}
 
 	return err
+}
+
+func (a *App) conditionsAreSatisfied(lightGroup string, conditions []scheduler.Condition) (bool, error) {
+	satisfied := true
+
+	for _, condition := range conditions {
+		switch condition.Type.ConditionType {
+		case scheduler.LightsAreOff:
+			currentLightState, err := a.huebridge.GetGroupLightState(lightGroup)
+			if err != nil {
+				return false, err
+			}
+			satisfied = currentLightState.Brightness.Percent == 0
+		case scheduler.LightsAreOn:
+			currentLightState, err := a.huebridge.GetGroupLightState(lightGroup)
+			if err != nil {
+				return false, err
+			}
+			satisfied = currentLightState.Brightness.Percent > 0
+		}
+
+		if !satisfied {
+			break
+		}
+	}
+
+	return satisfied, nil
 }

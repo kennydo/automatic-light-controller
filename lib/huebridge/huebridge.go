@@ -63,3 +63,31 @@ func (b *HueBridge) SetGroupLightState(groupName string, lightState lib.LightSta
 
 	return nil
 }
+
+func (b *HueBridge) GetGroupLightState(groupName string) (*lib.LightState, error) {
+	var err error
+
+	groupID, ok := b.groupIDByName[groupName]
+	if !ok {
+		return nil, fmt.Errorf("Did not recognize Hue group name: %v", groupName)
+	}
+
+	group, err := b.groupController.GetGroup(groupID)
+	if err != nil {
+		return nil, err
+	}
+
+	var percentage int
+
+	if group.Action.On {
+		percentage = int(math.Floor((float64(group.Action.Bri) / 254) * 100))
+	} else {
+		percentage = 0
+	}
+
+	return &lib.LightState{
+		Brightness: lib.Brightness{
+			Percent: percentage,
+		},
+	}, nil
+}
