@@ -1,21 +1,28 @@
 package app
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/kennydo/automatic-light-controller/lib/huebridge"
 	"github.com/kennydo/automatic-light-controller/lib/scheduler"
+	"go.uber.org/zap"
 )
 
 type App struct {
 	config    *Config
 	scheduler *scheduler.Scheduler
 	huebridge *huebridge.HueBridge
+	logger    *zap.Logger
 }
 
 func New(config *Config) (*App, error) {
-	mHueBridge, err := huebridge.New(config.HueBridge.IPAddress.String(), config.HueBridge.Username)
+	logger, err := zap.NewProduction()
+	if err != nil {
+		return nil, err
+	}
+	defer logger.Sync()
+
+	mHueBridge, err := huebridge.New(logger, config.HueBridge.IPAddress.String(), config.HueBridge.Username)
 	if err != nil {
 		return nil, err
 	}
@@ -26,6 +33,7 @@ func New(config *Config) (*App, error) {
 		config:    config,
 		scheduler: mScheduler,
 		huebridge: mHueBridge,
+		logger:    logger,
 	}, nil
 }
 
@@ -40,7 +48,7 @@ func (a *App) Run() error {
 		for _, scheduledAction := range scheduledActions {
 			currentTime = time.Now()
 			durationToSleep := scheduledAction.ScheduledFor.Sub(currentTime)
-			fmt.Printf("Sleeping %v minutes for scheduled action %+v\n", durationToSleep.Minutes(), scheduledAction)
+			a.logger.Info("Sleeping until next scheduled action", zap.Float64("minutes", durationToSleep.Minutes()), zap.Any("action", scheduledAction))
 			time.Sleep(durationToSleep)
 
 			for _, groupName := range scheduledAction.Rule.LightGroups {
@@ -50,11 +58,7 @@ func (a *App) Run() error {
 				}
 
 				if !conditionsAreSatisfied {
-					fmt.Printf(
-						"Not executing rule %+v on group %v because conditions are not satisfied\n",
-						scheduledAction.Rule,
-						groupName,
-					)
+					a.logger.Info("Not executing rule because conditions are not satisfied", zap.Any("rule", scheduledAction.Rule), zap.String("group", groupName))
 					continue
 				}
 

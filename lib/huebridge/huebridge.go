@@ -2,12 +2,12 @@ package huebridge
 
 import (
 	"fmt"
-	"log"
 	"math"
 
 	"github.com/heatxsink/go-hue/groups"
 	"github.com/heatxsink/go-hue/lights"
 	"github.com/kennydo/automatic-light-controller/lib"
+	"go.uber.org/zap"
 )
 
 type HueBridge struct {
@@ -15,9 +15,10 @@ type HueBridge struct {
 	Username        string
 	groupIDByName   map[string]int
 	groupController *groups.Groups
+	logger          *zap.Logger
 }
 
-func New(hostname string, username string) (*HueBridge, error) {
+func New(logger *zap.Logger, hostname string, username string) (*HueBridge, error) {
 	groupController := groups.New(hostname, username)
 
 	// Get the mapping of group ID by name
@@ -29,13 +30,14 @@ func New(hostname string, username string) (*HueBridge, error) {
 	for _, group := range allGroups {
 		groupIDByName[group.Name] = group.ID
 	}
-	log.Printf("Fetched these Hue groups: %v", groupIDByName)
+	logger.Info("Fetched Hue groups", zap.Any("groups", groupIDByName))
 
 	return &HueBridge{
 		Hostname:        hostname,
 		Username:        username,
 		groupController: groupController,
 		groupIDByName:   groupIDByName,
+		logger:          logger,
 	}, nil
 }
 
@@ -52,14 +54,14 @@ func (b *HueBridge) SetGroupLightState(groupName string, lightState lib.LightSta
 		Bri: uint8(math.Ceil(254 * (float64(lightState.Brightness.Percent) / 100.0))),
 	}
 
-	log.Printf("Going to set group %v to %+v", groupID, desiredState)
+	b.logger.Info("Setting group to desired state", zap.Int("groupID", groupID), zap.Any("desiredState", desiredState))
 
 	response, err := b.groupController.SetGroupState(groupID, desiredState)
 	if err != nil {
 		return err
 	}
 
-	log.Printf("Response from Hue: %v", response)
+	b.logger.Info("Got response from Hue", zap.Any("response", response))
 
 	return nil
 }

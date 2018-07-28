@@ -2,30 +2,73 @@
 
 
 [[projects]]
+  digest = "1:b16fbfbcc20645cb419f78325bb2e85ec729b338e996a228124d68931a6f2a37"
   name = "github.com/BurntSushi/toml"
   packages = ["."]
+  pruneopts = "UT"
   revision = "b26d9c308763d68093482582cea63d69be07a0f0"
   version = "v0.3.0"
 
 [[projects]]
   branch = "master"
+  digest = "1:39ad1526ca385a5bb375ebf9d442ca1dee8c6a51a9b5a671b08e98b855fd028a"
   name = "github.com/heatxsink/go-hue"
   packages = [
     "groups",
     "hue",
-    "lights"
+    "lights",
   ]
+  pruneopts = "UT"
   revision = "077c5fe843490c62dfd36c7eee473f314dc5d605"
 
 [[projects]]
   branch = "master"
+  digest = "1:98720564587a42f6e07b7e43cbe96128951a8594896d8de8d61c1a5d4ef5c4ba"
   name = "github.com/nathan-osman/go-sunrise"
   packages = ["."]
+  pruneopts = "UT"
   revision = "7c449e7c690b1ad3692d399bb4e49fcf864428d6"
+
+[[projects]]
+  digest = "1:3c1a69cdae3501bf75e76d0d86dc6f2b0a7421bc205c0cb7b96b19eed464a34d"
+  name = "go.uber.org/atomic"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "1ea20fb1cbb1cc08cbd0d913a96dead89aa18289"
+  version = "v1.3.2"
+
+[[projects]]
+  digest = "1:60bf2a5e347af463c42ed31a493d817f8a72f102543060ed992754e689805d1a"
+  name = "go.uber.org/multierr"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "3c4937480c32f4c13a875a1829af76c98ca3d40a"
+  version = "v1.1.0"
+
+[[projects]]
+  digest = "1:d9a420eae5f76973feeb733fbf58f6a89173255b63b27a7ae4b2124a73dc6c5b"
+  name = "go.uber.org/zap"
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore",
+  ]
+  pruneopts = "UT"
+  revision = "4d45f9617f7d90f7a663ff21c7a4321dbe78098b"
+  version = "v1.9.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "5f9f3b5016c37c605436abb5a0b7370b9508c2925e8b851096b3cb6ae018704d"
+  input-imports = [
+    "github.com/BurntSushi/toml",
+    "github.com/heatxsink/go-hue/groups",
+    "github.com/heatxsink/go-hue/lights",
+    "github.com/nathan-osman/go-sunrise",
+    "go.uber.org/zap",
+  ]
   solver-name = "gps-cdcl"
   solver-version = 1
