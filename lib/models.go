@@ -5,14 +5,17 @@ import (
 	"strconv"
 )
 
+// LightState describes the state of lights
 type LightState struct {
 	Brightness Brightness `toml:"brightness"`
 }
 
+// Brightness describes how bright something should be
 type Brightness struct {
 	Percent int
 }
 
+// UnmarshalText unmarshals text about brightness (in a format like "100%" or "0%")
 func (b *Brightness) UnmarshalText(text []byte) error {
 	var err error
 	if text[len(text)-1] != '%' {

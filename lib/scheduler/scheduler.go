@@ -7,11 +7,13 @@ import (
 	"github.com/nathan-osman/go-sunrise"
 )
 
+// Scheduler determines when the next scheduled actions are for a given set of rules in a given location
 type Scheduler struct {
 	rules          []Rule
 	locationConfig LocationConfig
 }
 
+// New creates a new Scheduler
 func New(locationConfig LocationConfig, rules []Rule) *Scheduler {
 	return &Scheduler{
 		locationConfig: locationConfig,
@@ -19,13 +21,14 @@ func New(locationConfig LocationConfig, rules []Rule) *Scheduler {
 	}
 }
 
-func (s *Scheduler) GetNextScheduledActions(currentTime time.Time) []ScheduledAction {
+// GetNextScheduledRules returns an ordered listing of all rules, ordered by soonest scheduled time
+func (s *Scheduler) GetNextScheduledRules(currentTime time.Time) []ScheduledRule {
 	currentTimeInLocalTZ := currentTime.In(s.locationConfig.Timezone.Location)
 	tomorrowInLocalTZ := currentTimeInLocalTZ.AddDate(0, 0, 1)
 
 	nextSunrise, nextSunset := s.GetNextSunriseAndSunset(currentTime)
 
-	scheduledActions := make([]ScheduledAction, len(s.rules), len(s.rules))
+	scheduledRules := make([]ScheduledRule, len(s.rules))
 
 	for i, rule := range s.rules {
 		// Get the next time that this rule is supposed to happen
@@ -46,22 +49,23 @@ func (s *Scheduler) GetNextScheduledActions(currentTime time.Time) []ScheduledAc
 			}
 		}
 
-		scheduledActions[i] = ScheduledAction{
+		scheduledRules[i] = ScheduledRule{
 			Rule:         rule,
 			ScheduledFor: scheduledFor.In(s.locationConfig.Timezone.Location),
 		}
 	}
 
 	sort.SliceStable(
-		scheduledActions,
+		scheduledRules,
 		func(i, j int) bool {
-			return scheduledActions[i].ScheduledFor.Before(scheduledActions[j].ScheduledFor)
+			return scheduledRules[i].ScheduledFor.Before(scheduledRules[j].ScheduledFor)
 		},
 	)
 
-	return scheduledActions
+	return scheduledRules
 }
 
+// GetNextSunriseAndSunset returns the next sunrise and sunset after a given time
 func (s *Scheduler) GetNextSunriseAndSunset(currentTime time.Time) (time.Time, time.Time) {
 	var nextSunrise, nextSunset *time.Time
 

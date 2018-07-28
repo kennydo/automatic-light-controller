@@ -22,12 +22,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	app, err := app.New(&config)
+	mApp, err := app.New(&config)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = app.Run()
+	err = mApp.Run()
 	if err != nil {
 		log.Fatal(err)
 	}

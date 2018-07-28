@@ -8,6 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// App is application that schedules and executes Hue light changes
 type App struct {
 	config    *Config
 	scheduler *scheduler.Scheduler
@@ -15,6 +16,7 @@ type App struct {
 	logger    *zap.Logger
 }
 
+// New creates a new app
 func New(config *Config) (*App, error) {
 	logger, err := zap.NewProduction()
 	if err != nil {
@@ -37,49 +39,38 @@ func New(config *Config) (*App, error) {
 	}, nil
 }
 
+// Run is the main loop
 func (a *App) Run() error {
 	var currentTime time.Time
-	var err error
 
 	for {
 		currentTime = time.Now()
-		scheduledActions := a.scheduler.GetNextScheduledActions(currentTime)
+		scheduledRules := a.scheduler.GetNextScheduledRules(currentTime)
 
-		for _, scheduledAction := range scheduledActions {
+		for _, scheduledRule := range scheduledRules {
 			currentTime = time.Now()
-			durationToSleep := scheduledAction.ScheduledFor.Sub(currentTime)
-			a.logger.Info("Sleeping until next scheduled action", zap.Float64("minutes", durationToSleep.Minutes()), zap.Any("action", scheduledAction))
+			durationToSleep := scheduledRule.ScheduledFor.Sub(currentTime)
+			a.logger.Info("Sleeping until next scheduled rule", zap.Float64("minutes", durationToSleep.Minutes()), zap.Any("rule", scheduledRule))
 			time.Sleep(durationToSleep)
 
-			for _, groupName := range scheduledAction.Rule.LightGroups {
-				conditionsAreSatisfied, err := a.conditionsAreSatisfied(groupName, scheduledAction.Rule.Conditions)
+			for _, groupName := range scheduledRule.Rule.LightGroups {
+				conditionsAreSatisfied, err := a.conditionsAreSatisfied(groupName, scheduledRule.Rule.Conditions)
 				if err != nil {
-					break
+					return err
 				}
 
 				if !conditionsAreSatisfied {
-					a.logger.Info("Not executing rule because conditions are not satisfied", zap.Any("rule", scheduledAction.Rule), zap.String("group", groupName))
+					a.logger.Info("Not executing rule because conditions are not satisfied", zap.Any("rule", scheduledRule.Rule), zap.String("group", groupName))
 					continue
 				}
 
-				err = a.huebridge.SetGroupLightState(groupName, scheduledAction.Rule.LightState)
+				err = a.huebridge.SetGroupLightState(groupName, scheduledRule.Rule.LightState)
 				if err != nil {
-					break
+					return err
 				}
-
 			}
-
-			if err != nil {
-				break
-			}
-		}
-
-		if err != nil {
-			break
 		}
 	}
-
-	return err
 }
 
 func (a *App) conditionsAreSatisfied(lightGroup string, conditions []scheduler.Condition) (bool, error) {

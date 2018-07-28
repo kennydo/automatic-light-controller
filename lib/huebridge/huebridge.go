@@ -10,6 +10,7 @@ import (
 	"go.uber.org/zap"
 )
 
+// HueBridge is the interface by which we control Hues
 type HueBridge struct {
 	Hostname        string
 	Username        string
@@ -18,6 +19,7 @@ type HueBridge struct {
 	logger          *zap.Logger
 }
 
+// New creates a new Hue bridge
 func New(logger *zap.Logger, hostname string, username string) (*HueBridge, error) {
 	groupController := groups.New(hostname, username)
 
@@ -41,6 +43,7 @@ func New(logger *zap.Logger, hostname string, username string) (*HueBridge, erro
 	}, nil
 }
 
+// SetGroupLightState sets the lights in a given Hue group to a desired state
 func (b *HueBridge) SetGroupLightState(groupName string, lightState lib.LightState) error {
 	var err error
 
@@ -66,6 +69,7 @@ func (b *HueBridge) SetGroupLightState(groupName string, lightState lib.LightSta
 	return nil
 }
 
+// GetGroupLightState retrieves the current state of the lights in a Hue group
 func (b *HueBridge) GetGroupLightState(groupName string) (*lib.LightState, error) {
 	var err error
 
