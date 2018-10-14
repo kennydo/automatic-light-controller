@@ -2,7 +2,7 @@ version: 2
 
 _helpers:
   - &circleci_golang_image
-    image: circleci/golang:1.10
+    image: circleci/golang:1.11
 jobs:
   incremental_lint:
     docker:
@@ -49,39 +49,20 @@ jobs:
   build:
     docker:
       - *circleci_golang_image
-    environment:
-      DEP_VERSION: 0.4.1
-      GOMETALINTER_VERSION: 2.0.5
-      TEST_RESULTS_DIR: /tmp/test-results
     working_directory: /go/src/github.com/kennydo/automatic-light-controller
+    environment:
+      GOMETALINTER_VERSION: 2.0.11
+      TEST_RESULTS_DIR: /tmp/test-results
     steps:
       - checkout
 
       - run: mkdir -p ${TEST_RESULTS_DIR}
 
       - restore_cache:
-          key: gopkg-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
+          key: gometalinter-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
 
       - run:
-          name: Ensure that dependencies are vendored
-          command: |
-            if [ ! -d /go/src/github.com/kennydo/automatic-light-controller/vendor ]; then
-              wget https://github.com/golang/dep/releases/download/v${DEP_VERSION}/dep-linux-amd64 -O /go/bin/dep
-              chmod a+x /go/bin/dep
-              /go/bin/dep ensure
-            fi
-
-      - save_cache:
-          key: gopkg-{{ .Branch }}-{{ checksum "Gopkg.lock" }}
-          paths:
-            - /go/src/github.com/kennydo/automatic-light-controller/vendor
-
-
-      - restore_cache:
-          key: gopkg-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
-
-      - run:
-          name:  Install gometalinter
+          name: Install gometalinter
           command: |
             if [ ! -d /home/circleci/gometalinter ]; then
               cd /tmp
@@ -96,10 +77,25 @@ jobs:
             go get github.com/jstemmer/go-junit-report
 
       - save_cache:
-          key: gopkg-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
+          key: gometalinter-{{ .Branch }}-{{ checksum ".gometalinter.json" }}
           paths:
             - /home/circleci/gometalinter
 
+      - restore_cache:
+          key: gosum-{{ .Branch }}-{{ checksum "go.sum" }}
+
+      - run:
+          name: Pull in modules
+          command: |
+            if [ ! -d vendor ]; then
+              # gometalinter doesn't support modules yet, so force module usage here
+              GO111MODULE=on go mod vendor
+            fi
+
+      - save_cache:
+          key: gosum-{{ .Branch }}-{{ checksum "go.sum" }}
+          paths:
+            - vendor
       - run:
           name: Run gometalinter
           command: |
